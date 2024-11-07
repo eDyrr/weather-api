@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
     <title>Weather API</title>
     <style>
         * {
@@ -68,13 +69,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="idir">
         <h1>The Weather API UI</h1>
         <form>
             <input type="text" placeholder="Enter the location" name="location">
-            <button hx-post="/weather" hx-trigger="click">
-                Get Weather
-            </button>
+            <button hx-post="/weather" hx-target="#idir" hx-swap="outerHTML" type="submit">Get Weather</button>
         </form>
     </div>
 </body>
