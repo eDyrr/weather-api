@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(to bottom right, #83a4d4, #b6fbff);
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+         h1 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+            transition: border 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"]:focus {
+            border-color: #83a4d4;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            background-color: #83a4d4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #6f94c4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>The Weather API UI</h1>
+        <form>
+            <input type="text" placeholder="Enter the location" name="location">
+            <button hx-post="/weather" hx-trigger="click">
+                Get Weather
+            </button>
+        </form>
+    </div>
+</body>
+</html>
