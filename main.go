@@ -23,10 +23,15 @@ func main() {
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
-		Protocol: 2,
 	})
 
+	defer client.Close()
+
 	ctx := context.Background()
+
+	status, _ := client.Ping(ctx).Result()
+
+	fmt.Println(status)
 
 	tmpl, _ = template.ParseGlob("./templates/*.html")
 
@@ -35,46 +40,43 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		tmpl.ExecuteTemplate(w, "index.html", nil)
-		fmt.Print(r.FormValue("location"))
 	})
 
 	router.HandleFunc("/weather", func(w http.ResponseWriter, r *http.Request) {
 
-		location := r.FormValue("location")
-
 		var weather model.Weather
 
-		err := client.HGetAll(ctx, fmt.Sprintf("location:%s", location)).Scan(&weather)
+		// err := client.HGetAll(ctx, fmt.Sprintf("location:%s", location)).Scan(&weather)
 
-		if err != nil {
-			panic(err)
+		jsonWeather, err := client.Get(ctx, r.FormValue("location")).Result()
+
+		if jsonWeather != "" {
+			fmt.Print("from redis")
+			fmt.Printf("%+v\n", jsonWeather)
 		}
 
-		if weather.Location.Name != "" {
-			tmpl.ExecuteTemplate(w, "result", &weather)
-			return
+		if err == redis.Nil {
+			fmt.Print("from API")
+			response, err := http.Get(fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", os.Getenv("API_KEY"), r.FormValue("location")))
+			if err != nil {
+				http.Error(w, "Failed to fetch weather data", http.StatusInternalServerError)
+			}
+
+			defer response.Body.Close()
+
+			jsonWeather, _ := io.ReadAll(response.Body)
+
+			if err := json.Unmarshal(jsonWeather, &weather); err != nil {
+				// http.Error(w, "Failed to parse weather data", http.StatusInternalServerError)
+			}
+			fmt.Printf("%+v\n", weather)
+			// tmpl.ExecuteTemplate(w, "result", &weather)
+
+			client.Set(ctx, r.FormValue("location"), jsonWeather, time.Second*20)
+		} else {
+			json.Unmarshal([]byte(jsonWeather), &weather)
 		}
 
-		response, err := http.Get(fmt.Sprintf("http://api.weatherapi.com/v1/current.json?key=%s&q=%s&aqi=no", os.Getenv("API_KEY"), location))
-		if err != nil {
-			http.Error(w, "Failed to fetch weather data", http.StatusInternalServerError)
-			return
-		}
-
-		defer response.Body.Close()
-
-		data, _ := io.ReadAll(response.Body)
-
-		// var weather model.Weather
-
-		if err := json.Unmarshal(data, &weather); err != nil {
-			http.Error(w, "Failed to parse weather data", http.StatusInternalServerError)
-			return
-		}
-
-		client.Set(ctx, location, weather, time.Second*20)
-
-		fmt.Printf("%+v\n", weather)
 		tmpl.ExecuteTemplate(w, "result", &weather)
 	}).Methods("POST")
 
